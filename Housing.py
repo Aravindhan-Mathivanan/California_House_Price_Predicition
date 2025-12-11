@@ -58,7 +58,7 @@ housing["ocean_proximity"].value_counts()
 housing.describe()
 
 
-# In[22]:
+# In[7]:
 
 
 import matplotlib.pyplot as plt 
@@ -66,11 +66,31 @@ housing.hist(bins=50, figsize=(25,20))
 plt.show()
 
 
-# In[24]:
+# ### Trying Stratified sampling based on the feature income_cat which is derived from the median_income feature
+
+# In[8]:
 
 
 from sklearn.model_selection import train_test_split
 train_set, test_set = train_test_split(housing, test_size = 0.2, random_state = 42)
+
+
+# In[23]:
+
+
+import numpy as np
+
+housing['income_cat'] = np.ceil(housing['median_income']/1.5)
+housing.loc[housing['income_cat'] >= 5, 'income_cat'] = 5.0
+
+from sklearn.model_selection import StratifiedShuffleSplit
+
+split = StratifiedShuffleSplit(n_splits = 1, test_size = 0.2, random_state = 42)
+for train_index, test_index in split.split(housing, housing['income_cat']):
+    strat_train_set = housing.loc[train_index]
+    strat_test_set = housing.loc[test_index]
+
+housing['income_cat'].value_counts() / len(housing)
 
 
 # In[ ]:
