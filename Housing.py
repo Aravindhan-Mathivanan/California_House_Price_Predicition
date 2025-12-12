@@ -33,11 +33,11 @@ def load_housing_data(housing_path=Housing_path):
     return pd.read_csv(csv_path)
 
 
-# In[3]:
+# In[24]:
 
 
 housing = load_housing_data()
-housing.tail(2000)
+housing.head(4862)
 
 
 # In[4]:
@@ -58,15 +58,13 @@ housing["ocean_proximity"].value_counts()
 housing.describe()
 
 
-# In[7]:
+# In[27]:
 
 
 import matplotlib.pyplot as plt 
 housing.hist(bins=50, figsize=(25,20)) 
 plt.show()
 
-
-# ### Trying Stratified sampling based on the feature income_cat which is derived from the median_income feature
 
 # In[8]:
 
@@ -75,13 +73,64 @@ from sklearn.model_selection import train_test_split
 train_set, test_set = train_test_split(housing, test_size = 0.2, random_state = 42)
 
 
-# In[23]:
+# In[ ]:
+
+
+# as the median_income feature has wide range of values, when it is splitted it might cause bias for the ML algo
+# so we are doing feature engineering, i.e creating a new feature from the existing feature
+# And making that new feature balanced with better representation of the values to avoid bias
+
+
+# In[25]:
 
 
 import numpy as np
-
 housing['income_cat'] = np.ceil(housing['median_income']/1.5)
+
+print(housing['income_cat'].head(4862))
+
+
+# In[37]:
+
+
+import numpy as np
+# creating a new column named income_cat by downscaling the median income by the value of 1.5
+# No idea how the value 1.5 is chosen to scaledown probably bcz the max value is 15
+housing['income_cat'] = np.ceil(housing['median_income']/1.5) 
+# np.ceil is a rounding function in numpy 
+# It rounds the number to the largest closest number as a float like 1.7 -> 2.0 ; 5.3 -> 6.0
+
+# now let's see the histogram of income_cat
+housing['income_cat'].hist(bins = 50, figsize = (5,5))
+plt.xticks(ticks=np.arange(0, 16, 1))
+plt.show()
+
+
+# In[59]:
+
+
+# in the histogram of incom_cat most of the income values are clustered between 1 - 5 but still some go beyond 6
+# So the samples for the income category greater than 5 (6 - 11) are less this can lead to a bias in stratified sampling 
+# i.e the categories (6-11) has less representation than other categories
+
+# Hence we merge the categories 6-11 to the category 5
 housing.loc[housing['income_cat'] >= 5, 'income_cat'] = 5.0
+# The syntax in the above line is split into three parts
+# 1. Selecting the values greater than or equal to 5:  housing['income_cat'] >= 5
+
+# 2. choosing the rows and columnn: housing.loc[housing['income_cat'] >= 5, 'income_cat'] 
+# --> i.e for the rows in the housing['income_cat'] >= 5 in the column 'income_cat' in housing dataframe
+
+# 3. assigning those listed values as 5.0: housing.loc[housing['income_cat'] >= 5, 'income_cat'] = 5.0
+
+# Now let's again look at the income_cat in which the categories (6-11) are merged to 5
+housing['income_cat'].hist(bins = 10, figsize = (5,5))
+plt.xticks(ticks=np.arange(0, 16, 1))
+plt.show()
+
+
+# In[60]:
+
 
 from sklearn.model_selection import StratifiedShuffleSplit
 
@@ -93,8 +142,4 @@ for train_index, test_index in split.split(housing, housing['income_cat']):
 housing['income_cat'].value_counts() / len(housing)
 
 
-# In[ ]:
-
-
-
-
+# # add comments that we have to sratified sample based on target
