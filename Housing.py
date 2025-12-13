@@ -33,7 +33,7 @@ def load_housing_data(housing_path=Housing_path):
     return pd.read_csv(csv_path)
 
 
-# In[24]:
+# In[3]:
 
 
 housing = load_housing_data()
@@ -58,7 +58,7 @@ housing["ocean_proximity"].value_counts()
 housing.describe()
 
 
-# In[27]:
+# In[7]:
 
 
 import matplotlib.pyplot as plt 
@@ -73,7 +73,7 @@ from sklearn.model_selection import train_test_split
 train_set, test_set = train_test_split(housing, test_size = 0.2, random_state = 42)
 
 
-# In[ ]:
+# In[9]:
 
 
 # as the median_income feature has wide range of values, when it is splitted it might cause bias for the ML algo
@@ -81,16 +81,21 @@ train_set, test_set = train_test_split(housing, test_size = 0.2, random_state = 
 # And making that new feature balanced with better representation of the values to avoid bias
 
 
-# In[25]:
+# In[10]:
 
 
-import numpy as np
-housing['income_cat'] = np.ceil(housing['median_income']/1.5)
+## So the point of creating new feature is the StratifedShuffleSplit function requieres a categorical feature to keep the same percentage of  
+# samples in both training and test set
 
-print(housing['income_cat'].head(4862))
+## as the dataset has almost unique numerical values for each samples for each features (except: Ocean_proximity a categorical feature)
+## A categorical feature that has balanced no of samples is required to do stratified sampling
+
+## Why they ignored Ocean_proximity?
+# As in the previous snippet we checked the value counts of ocean proximity in which the island category has only 5 samples 
+# which can induce a bias in the split
 
 
-# In[37]:
+# In[11]:
 
 
 import numpy as np
@@ -106,7 +111,7 @@ plt.xticks(ticks=np.arange(0, 16, 1))
 plt.show()
 
 
-# In[59]:
+# In[12]:
 
 
 # in the histogram of incom_cat most of the income values are clustered between 1 - 5 but still some go beyond 6
@@ -129,7 +134,7 @@ plt.xticks(ticks=np.arange(0, 16, 1))
 plt.show()
 
 
-# In[60]:
+# In[13]:
 
 
 from sklearn.model_selection import StratifiedShuffleSplit
@@ -139,7 +144,37 @@ for train_index, test_index in split.split(housing, housing['income_cat']):
     strat_train_set = housing.loc[train_index]
     strat_test_set = housing.loc[test_index]
 
-housing['income_cat'].value_counts() / len(housing)
+housing['income_cat'].value_counts() / len(housing)*100
+# checking how much percentage of samples fall into each category of income_cat feature
 
 
-# # add comments that we have to sratified sample based on target
+# In[14]:
+
+
+# So as we tried stratified sampling based on a new feature, let's drop it as we no longer need it
+for set in (strat_train_set, strat_test_set):
+    set.drop(['income_cat'], axis = 1, inplace = True)
+
+
+# In[15]:
+
+
+# Visualizing the data to get more insights
+housing.plot(kind = 'scatter', x = 'longitude', y = 'latitude')
+# this plot shows the houses location in california housing dataset
+# The plot quite resembles the map of california
+
+
+# In[16]:
+
+
+# Let's the density of houses by setting the alpha as 0.1
+housing.plot(kind = 'scatter', x = 'longitude', y = 'latitude', alpha = 0.1)
+# Now we can se the places with more density darker
+
+
+# In[ ]:
+
+
+
+
