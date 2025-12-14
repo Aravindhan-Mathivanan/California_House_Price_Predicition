@@ -168,9 +168,68 @@ housing.plot(kind = 'scatter', x = 'longitude', y = 'latitude')
 # In[16]:
 
 
-# Let's the density of houses by setting the alpha as 0.1
+# Let's the density of houses by setting the alpha as 0.1 (the alpha sets transparency of each points)
 housing.plot(kind = 'scatter', x = 'longitude', y = 'latitude', alpha = 0.1)
-# Now we can se the places with more density darker
+# Now we can se the places with more density darker (because there are more data points makes it more darker)
+
+
+# In[17]:
+
+
+# Let's have a better visualization of more features together
+housing.plot(kind = 'scatter', x = 'longitude', y = 'latitude', alpha = 0.3, s = housing['population']/100, label = 'population',
+             c = 'median_house_value', cmap=plt.get_cmap('rainbow'),colorbar = 'True')
+# Let's see what's happening here step by step
+# step 1: sets up x and y
+# Creates an empty plot with:
+# kind of the plot is set to scatter
+# X-axis: longitude values
+# Y-axis: latitude values
+# Result: A map of California with dots at correct locations
+
+# step 2: adjust size for each points of scatter plot
+# For EACH dot:
+# - Check population value
+# - Divide by 100
+# - Set dot size accordingly
+# Example: 
+# House 1: Population 5000 → Dot size = 50 pixels
+# House 2: Population 200 → Dot size = 2 pixels
+
+# step 3: Apply colour
+# For EACH dot:
+# - Check house price
+# - Look up color in 'jet' colormap
+# - Apply that color to dot
+# Example (jet colormap):
+# $100,000 → Dark blue
+# $300,000 → Green  
+# $500,000 → Yellow
+# $700,000 → Red
+
+# step 4: Apply transparency
+# Make ALL dots 40% transparent
+# So overlapping dots show through
+
+# Now the maps looks more good with each dots representing the location of houses (x and y), size of dots representing population in each houses
+# the color of each dots represents the population and the colourbar represents the population that the colour indicates
+
+
+# In[18]:
+
+
+#This plot tells that the housing prices are very much related to the location (e.g., close to the ocean) and to the population density
+
+
+# In[20]:
+
+
+## Since the dataset is not too large, you can easily compute the standard correlation coefficient (also called Pearson’s r) between every pair of
+# attributes using the corr() method
+
+housing_temp = housing.drop('ocean_proximity', axis = 1)
+corr_matrix = housing_temp.corr()
+corr_matrix['median_house_value'].sort_values(ascending = 0)
 
 
 # In[ ]:
