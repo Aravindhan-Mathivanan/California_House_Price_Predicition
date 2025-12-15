@@ -221,15 +221,81 @@ housing.plot(kind = 'scatter', x = 'longitude', y = 'latitude', alpha = 0.3, s =
 #This plot tells that the housing prices are very much related to the location (e.g., close to the ocean) and to the population density
 
 
-# In[20]:
+# In[21]:
 
 
 ## Since the dataset is not too large, you can easily compute the standard correlation coefficient (also called Pearson’s r) between every pair of
 # attributes using the corr() method
+# As the ocean_proximity is a categorical feature it cannot be correlated with other features so let's drop it temporarily
 
 housing_temp = housing.drop('ocean_proximity', axis = 1)
 corr_matrix = housing_temp.corr()
 corr_matrix['median_house_value'].sort_values(ascending = 0)
+
+
+# In[ ]:
+
+
+## The correlation coefficient ranges from –1 to 1. When it is close to 1, it means that there is a strong positive correlation; 
+# for example, the median house value tends to go up when the median income goes up. 
+# When the coefficient is close to –1, it means that there is a strong negative correlation;
+# you can see a small negative correlation between the latitude and the median house value
+# coefficients close to zero mean that there is no linear correlation.
+
+
+# In[41]:
+
+
+# Another way to check the correlation between attributes is by using Pandas Scatter_matrix function 
+# Which plots each attriubute agains all other attributes in the dataset
+# As the dataset has 11 attributes it'll produce 11*11 = 121 plots so let's plot only most correlated attributes with median_housing_value
+
+from pandas.plotting import scatter_matrix
+
+attributes = ['median_house_value', 'median_income', 'total_rooms', 'housing_median_age']
+scatter_matrix(housing[attributes], figsize = (10,7), color = 'blue')
+
+
+# In[103]:
+
+
+# In the plots the diagonal elements are each feature plotted against itself but that would result in a straight line
+# Instead pandas shows the histogram of the respective attribute
+
+# From these plots the most promising attribute to predict the median_house_value is median_income
+
+housing.plot(kind = 'scatter', x = 'median_income', y = 'median_house_value', alpha = 0.5, color = 'darkviolet')
+
+
+# In[104]:
+
+
+'''This plot reveals a few things. First, the correlation is indeed very strong;
+ you can clearly see the upward trend and the points are not too dispersed. 
+ Second, the price cap that we noticed earlier is clearly visible as a horizontal line at $500,000. 
+ But this plot reveals other less obvious straightlines: a horizontal line around $450,000, 
+ another around $350,000, perhaps one around $280,000, and a few more below that. You may want to try
+ removing the corresponding districts to prevent your algorithms from learning to reproduce these data quirks.'''
+
+
+# In[105]:
+
+
+# Experimenting with attribute combination
+
+
+# In[48]:
+
+
+housing["rooms_per_household"] = housing["total_rooms"]/housing["households"] 
+housing["bedrooms_per_room"] = housing["total_bedrooms"]/housing["total_rooms"] 
+housing["population_per_household"]=housing["population"]/housing["households"]
+
+
+# In[49]:
+
+
+housing.head()
 
 
 # In[ ]:
