@@ -43,6 +43,7 @@ housing.head(4862)
 # In[4]:
 
 
+# The each sample represent  to a census block groups in each district of california as per 1990 census data
 housing.info()
 
 
@@ -221,7 +222,7 @@ housing.plot(kind = 'scatter', x = 'longitude', y = 'latitude', alpha = 0.3, s =
 #This plot tells that the housing prices are very much related to the location (e.g., close to the ocean) and to the population density
 
 
-# In[21]:
+# In[19]:
 
 
 ## Since the dataset is not too large, you can easily compute the standard correlation coefficient (also called Pearson’s r) between every pair of
@@ -233,17 +234,17 @@ corr_matrix = housing_temp.corr()
 corr_matrix['median_house_value'].sort_values(ascending = 0)
 
 
-# In[ ]:
+# In[20]:
 
 
 ## The correlation coefficient ranges from –1 to 1. When it is close to 1, it means that there is a strong positive correlation; 
 # for example, the median house value tends to go up when the median income goes up. 
 # When the coefficient is close to –1, it means that there is a strong negative correlation;
 # you can see a small negative correlation between the latitude and the median house value
-# coefficients close to zero mean that there is no linear correlation.
+# coefficients close to zero mean that there is no linear correlation. 
 
 
-# In[41]:
+# In[21]:
 
 
 # Another way to check the correlation between attributes is by using Pandas Scatter_matrix function 
@@ -256,7 +257,7 @@ attributes = ['median_house_value', 'median_income', 'total_rooms', 'housing_med
 scatter_matrix(housing[attributes], figsize = (10,7), color = 'blue')
 
 
-# In[103]:
+# In[22]:
 
 
 # In the plots the diagonal elements are each feature plotted against itself but that would result in a straight line
@@ -267,7 +268,7 @@ scatter_matrix(housing[attributes], figsize = (10,7), color = 'blue')
 housing.plot(kind = 'scatter', x = 'median_income', y = 'median_house_value', alpha = 0.5, color = 'darkviolet')
 
 
-# In[104]:
+# In[23]:
 
 
 '''This plot reveals a few things. First, the correlation is indeed very strong;
@@ -278,24 +279,99 @@ housing.plot(kind = 'scatter', x = 'median_income', y = 'median_house_value', al
  removing the corresponding districts to prevent your algorithms from learning to reproduce these data quirks.'''
 
 
-# In[105]:
+# In[24]:
 
 
 # Experimenting with attribute combination
 
 
-# In[48]:
+# In[25]:
 
 
-housing["rooms_per_household"] = housing["total_rooms"]/housing["households"] 
-housing["bedrooms_per_room"] = housing["total_bedrooms"]/housing["total_rooms"] 
+housing["rooms_per_household"] = housing["total_rooms"]/housing["households"]
+# As the total_rooms in a census block group is not useful as per the correlation matrix
+# so creating a new feature rooms per houses by dividing the total rooms by the total houses in each census block groups
+# By which we can know average no of rooms in a house of a census block group
+
+housing["bedrooms_per_room"] = housing["total_bedrooms"]/housing["total_rooms"]
+# Similarly we can identify no of bedrooms from the no of rooms gives the data of how luxury the house hold are!
+# Like total bed rooms = 3 and total rooms = 3 means it is not very luxury house; 3 bedrooms out of 10 rooms means luxury house
 housing["population_per_household"]=housing["population"]/housing["households"]
+# Similarly population per household gives the indirect data on how spacious the house is
+# more people and less house means houses are less likely spacious (densely packed) otherwise less people and more house means more spacious households
 
 
-# In[49]:
+# In[26]:
 
 
 housing.head()
+
+
+# In[27]:
+
+
+housing_temp = housing.drop('ocean_proximity', axis = 1)
+corr_matrix = housing_temp.corr()
+corr_matrix['median_house_value'].sort_values(ascending = 0)
+
+
+# In[28]:
+
+
+# The new bedrooms_per_room attribute is much more correlated with the median house value than the total number of rooms or bedrooms. 
+# As it's correlation coefficient is moved towards -1
+# The number of rooms per household is also more informative than the total number of rooms in a district
+# As it's correlation coefficient is moved towards +1
+# obviously the larger the houses, the more expensive they are.
+
+
+# In[29]:
+
+
+# Prepare the data for ML
+
+
+# In[30]:
+
+
+# It’s time to prepare the data for your Machine Learning algorithms. 
+# Instead of just doing this manually, you should write functions to do that, for
+# several good reasons:
+# - This will allow you to reproduce these transformations easily on any dataset (e.g., the next time you get a fresh dataset).
+# - You will gradually build a library of transformation functions that you can reuse in future projects.
+# - You can use these functions in your live system to transform the new data before feeding it to your algorithms.
+# - This will make it possible for you to easily try various transformations and see which combination of transformations works best
+
+
+# In[31]:
+
+
+housing = strat_train_set.drop("median_house_value", axis=1)
+housing_labels = strat_train_set["median_house_value"].copy()
+housing.head()
+
+
+# In[32]:
+
+
+housing["total_bedrooms"].info()
+
+
+# In[35]:
+
+
+housing["total_bedrooms"] = housing["total_bedrooms"].fillna(435.000000)      # option 3
+# If you choose option 3, you should compute the median value on the
+# training set, and use it to fill the missing values in the training set, but also
+# don’t forget to save the median value that you have computed. You will
+# need it later to replace missing values in the test set when you want to
+# evaluate your system
+
+
+# In[36]:
+
+
+housing["total_bedrooms"].info()
 
 
 # In[ ]:
