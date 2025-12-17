@@ -354,24 +354,52 @@ housing.head()
 # In[32]:
 
 
+housing["total_bedrooms"] = housing["total_bedrooms"].fillna(435.000000)      # option 3
+# If you choose option 3, you should compute the median value on the
+# training set, and use it to fill the missing values in the training set, but also
+# don’t forget to save the median value that you have computed. You will
+# need it later to replace missing values in the test set when you want to evaluate your system
+
+
+# In[33]:
+
+
 housing["total_bedrooms"].info()
+
+
+# In[34]:
+
+
+housing_num = housing.drop('ocean_proximity', axis = 1)
 
 
 # In[35]:
 
 
-housing["total_bedrooms"] = housing["total_bedrooms"].fillna(435.000000)      # option 3
-# If you choose option 3, you should compute the median value on the
-# training set, and use it to fill the missing values in the training set, but also
-# don’t forget to save the median value that you have computed. You will
-# need it later to replace missing values in the test set when you want to
-# evaluate your system
+# Using Imputer module to handle missing values
+from sklearn.impute import SimpleImputer
+imputer = SimpleImputer(missing_values = np.nan, strategy='median') # So the impute function doesn't include missing values for calculating median
+imputer.fit(housing_num) # Here it calculates the median for each attributes in the dataset
+
+# The imputer function will replace the missing_values with median, mean, most_frequent values of the attributes in the dataset
 
 
-# In[36]:
+# In[38]:
 
 
-housing["total_bedrooms"].info()
+imputer.statistics_
+# The imputer has simply computed the median of each attribute and stored the result in its statistics_ instance variable.
+
+
+# In[42]:
+
+
+# Now to replace those missing values in the dataset by the calculated mean values
+X = imputer.transform(housing_num) # replaces the missing values of the dataset by the computed median values
+# But it will be a plain Numpy array containing the transformed features
+
+# Converting those features from numpy arrays to pandas DataFrame
+housing_tr = pd.DataFrame(X, columns = housing_num.columns)
 
 
 # In[ ]:
