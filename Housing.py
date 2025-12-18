@@ -384,14 +384,14 @@ imputer.fit(housing_num) # Here it calculates the median for each attributes in 
 # The imputer function will replace the missing_values with median, mean, most_frequent values of the attributes in the dataset
 
 
-# In[38]:
+# In[36]:
 
 
 imputer.statistics_
 # The imputer has simply computed the median of each attribute and stored the result in its statistics_ instance variable.
 
 
-# In[42]:
+# In[37]:
 
 
 # Now to replace those missing values in the dataset by the calculated mean values
@@ -400,6 +400,72 @@ X = imputer.transform(housing_num) # replaces the missing values of the dataset 
 
 # Converting those features from numpy arrays to pandas DataFrame
 housing_tr = pd.DataFrame(X, columns = housing_num.columns)
+
+
+# In[38]:
+
+
+# Handling text and categorical attribute
+
+
+# In[39]:
+
+
+from sklearn.preprocessing import LabelEncoder
+encoder = LabelEncoder()
+housing_cat = housing['ocean_proximity']
+housing_cat_encoded = encoder.fit_transform(housing_cat)
+housing_cat_encoded
+
+
+# In[40]:
+
+
+# LebelEncoders are better suited for target categories rather for feature encoding!
+
+
+# In[45]:
+
+
+# When you use LabelEncoder, it converts categories like ['INLAND', 'NEAR BAY', 'NEAR OCEAN'] to numbers [0, 1, 2, ...].
+# # Output might be:
+# Categories: ['INLAND', 'NEAR BAY', 'NEAR OCEAN', 'ISLAND', '<1H OCEAN']
+# Encoded: [1 3 4 2 0]  # Random order based on alphabetical
+# Mapping: {'INLAND': 1, 'NEAR BAY': 3, 'NEAR OCEAN': 4, 'ISLAND': 2, '<1H OCEAN': 0}
+
+# But here's the issue: Machine learning algorithms think numbers have mathematical relationships!
+# ISLAND (2) is closer to INLAND (1) than to NEAR BAY (3)"
+# But ISLAND is VERY different from INLAND!
+# ISLAND might be more similar to NEAR OCEAN (both involve water)
+
+# To fix this issue, a common solution is This is called one-hot encoding, because only one attribute will be equal to 1
+
+from sklearn.preprocessing import OneHotEncoder 
+encoder = OneHotEncoder() 
+housing_cat_1hot = encoder.fit_transform(housing_cat.values.reshape(-1,1))
+
+# Here the housing_cat is a Series and is different than a 1d array so we have to reshape it to a 1D array as .fit_transform takes 1D array
+# import pandas as pd
+# For eg:
+# s = pd.Series([10, 20, 30, 40], index=['A', 'B', 'C', 'D'])
+# print(s)
+# # A    10
+# # B    20  
+# # C    30
+# # D    40
+# # dtype: int64  ← Has labels (A, B, C, D)
+
+housing_cat_1hot
+
+
+# In[46]:
+
+
+# Notice that the output is a SciPy sparse matrix, instead of a NumPy array.
+# This is very useful when you have categorical attributes with thousands of categories. which is super efficient with memory usage
+# But for small dataset with less categories dense array (array in general) is enough also some ML models don't support sparse matrix
+
+housing_cat_1hot.toarray() # so converting it as a 2D array
 
 
 # In[ ]:
