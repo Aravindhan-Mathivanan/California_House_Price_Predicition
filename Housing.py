@@ -468,6 +468,49 @@ housing_cat_1hot
 housing_cat_1hot.toarray() # so converting it as a 2D array
 
 
+# In[54]:
+
+
+# Custom feature engineering Transformers
+# To Create your own data transformers (not just use sklearn's)
+
+# To Make them compatible with sklearn's ecosystem
+
+# To Get free helper methods using TransformerMixin and BaseEstimator
+
+# To Enable hyperparameter tuning for your custom transformers
+from sklearn.base import BaseEstimator, TransformerMixin
+
+rooms_ix, bedrooms_ix, population_ix, household_ix = 3,4,5,6   # defining the column indices from the dataframe
+
+class CombinedAttributesAdder(BaseEstimator, TransformerMixin): # creating a custom transformer with base classes (BaseEstimator and TransformerMixin)
+    def __init__(self, add_bedrooms_per_room = True):           
+        self.add_bedrooms_per_room = add_bedrooms_per_room
+        
+    def fit(self, X, y = None):
+        return self
+        
+    def transform(self, X, y = None):
+        rooms_per_household = X[:,rooms_ix]/ X[:,household_ix]
+        population_per_household = X[:,population_ix]/ X[:,household_ix]
+        if self.add_bedrooms_per_room:
+            bedrooms_per_room = X[:,bedrooms_ix] / X[:,rooms_ix]
+            return np.c_[X, rooms_per_household, population_per_household, bedrooms_per_room]
+        else:
+            return np.c_[X, rooms_per_household, population_per_household]
+
+attr_adder = CombinedAttributesAdder(add_bedrooms_per_room = False)
+housing_extra_attribs = attr_adder.transform(housing.values)
+
+
+# In[55]:
+
+
+# In this example the transformer has one hyperparameter,
+# add_bedrooms_per_room, set to True by default (it is often helpful to provide sensible defaults).
+# This hyperparameter will allow you to easily find out whether adding this attribute helps the Machine Learning algorithms or not.
+
+
 # In[ ]:
 
 
