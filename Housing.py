@@ -424,7 +424,7 @@ housing_cat_encoded
 # LebelEncoders are better suited for target categories rather for feature encoding!
 
 
-# In[45]:
+# In[41]:
 
 
 # When you use LabelEncoder, it converts categories like ['INLAND', 'NEAR BAY', 'NEAR OCEAN'] to numbers [0, 1, 2, ...].
@@ -458,7 +458,7 @@ housing_cat_1hot = encoder.fit_transform(housing_cat.values.reshape(-1,1))
 housing_cat_1hot
 
 
-# In[46]:
+# In[42]:
 
 
 # Notice that the output is a SciPy sparse matrix, instead of a NumPy array.
@@ -468,10 +468,10 @@ housing_cat_1hot
 housing_cat_1hot.toarray() # so converting it as a 2D array
 
 
-# In[54]:
+# In[43]:
 
 
-# Custom feature engineering Transformers
+## Custom feature engineering Transformers
 # To Create your own data transformers (not just use sklearn's)
 
 # To Make them compatible with sklearn's ecosystem
@@ -479,13 +479,17 @@ housing_cat_1hot.toarray() # so converting it as a 2D array
 # To Get free helper methods using TransformerMixin and BaseEstimator
 
 # To Enable hyperparameter tuning for your custom transformers
+
+
 from sklearn.base import BaseEstimator, TransformerMixin
 
 rooms_ix, bedrooms_ix, population_ix, household_ix = 3,4,5,6   # defining the column indices from the dataframe
 
+# Using OOPs to create the transformer to reuse it later!
+
 class CombinedAttributesAdder(BaseEstimator, TransformerMixin): # creating a custom transformer with base classes (BaseEstimator and TransformerMixin)
     def __init__(self, add_bedrooms_per_room = True):           
-        self.add_bedrooms_per_room = add_bedrooms_per_room
+        self.add_bedrooms_per_room = add_bedrooms_per_room 
         
     def fit(self, X, y = None):
         return self
@@ -503,12 +507,49 @@ attr_adder = CombinedAttributesAdder(add_bedrooms_per_room = False)
 housing_extra_attribs = attr_adder.transform(housing.values)
 
 
-# In[55]:
+# In[44]:
 
 
 # In this example the transformer has one hyperparameter,
 # add_bedrooms_per_room, set to True by default (it is often helpful to provide sensible defaults).
 # This hyperparameter will allow you to easily find out whether adding this attribute helps the Machine Learning algorithms or not.
+
+
+# In[45]:
+
+
+# Feature Scaling (Normalization/ Standardization)
+
+# With few exceptions, Machine Learning algorithms don’t perform well when the input numerical attributes have very different scales.
+# This is the case for the housing data: the total number of rooms ranges from about 6 to 39,320, while the median incomes only range from 0 to 15.
+#  Note: scaling the target values is generally not required.
+
+# There are two common ways to get all attributes to have the same scale: min-max scaling and standardization.
+
+
+
+# In[ ]:
+
+
+# Creating a Pipeline for cleaning, feature engineering, scaling and encoding the dataset
+
+
+# In[48]:
+
+
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+
+num_pipeline = Pipeline([('imputer', SimpleImputer(strategy = 'median')),('attribs_adder', CombinedAttributesAdder()),('std_scaler',StandardScaler()),])
+housing_num_tr = num_pipeline.fit_transform(housing_num)
+
+# You now have a pipeline for numerical values, and you also need to apply the LabelBinarizer on the categorical values: 
+# how can you join these transformations into a single pipeline? 
+# Scikit-Learn provides a FeatureUnion class for this
+
+from sklearn.pipeline import FeatureUnion
+num_attribs = list(housing_num)
+cat_attribs = ['ocean_proximity']
 
 
 # In[ ]:
