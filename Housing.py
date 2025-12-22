@@ -534,7 +534,7 @@ housing_extra_attribs = attr_adder.transform(housing.values)
 # Creating a Pipeline for cleaning, feature engineering, scaling and encoding the dataset
 
 
-# In[51]:
+# In[47]:
 
 
 from sklearn.pipeline import Pipeline, FeatureUnion
@@ -542,6 +542,7 @@ from sklearn.preprocessing import StandardScaler
 
 num_pipeline = Pipeline([('imputer', SimpleImputer(strategy = 'median')),('attribs_adder', CombinedAttributesAdder()),('std_scaler',StandardScaler()),])
 housing_num_tr = num_pipeline.fit_transform(housing_num)
+housing_num_tr.shape
 
 # You now have a pipeline for numerical values, and you also need to apply the LabelBinarizer on the categorical values: 
 # how can you join these transformations into a single pipeline? 
@@ -557,18 +558,57 @@ class DataFrameSelector(BaseEstimator, TransformerMixin):
         return self
     def transform(self, X):
         return X[self.attribute_names].values
-
-
+        
 num_pipeline = Pipeline([('selector', DataFrameSelector(num_attribs)),('imputer', SimpleImputer(strategy = 'median')),
                          ('attribs_adder', CombinedAttributesAdder()),('std_scaler',StandardScaler())])
-cat_pipeline = Pipeline([('selector', DataFrameSelector(cat_attribs)),('one_hot', OneHotEncoder(sparse_output = False))])
+cat_pipeline = Pipeline([('selector', DataFrameSelector(cat_attribs)),('one_hot', OneHotEncoder(drop = None,sparse_output = False))])
 
 full_pipeline = FeatureUnion(transformer_list = [('num_pipeline', num_pipeline),('cat_pipeline', cat_pipeline)])
 
 housing_prepared = full_pipeline.fit_transform(housing)
-housing_prepared
-housing_prepared[:5]
-housing.head()
+housing_prepared.shape
+
+
+# In[48]:
+
+
+# Select and Train a Model
+
+
+# In[49]:
+
+
+# Training and evaluating on the training set
+
+
+# In[50]:
+
+
+from sklearn.linear_model import LinearRegression
+lin_reg = LinearRegression()
+lin_reg.fit(housing_prepared, housing_labels)
+
+
+# In[51]:
+
+
+# Let's try full preprocessing pipeline on few training instances
+some_data = housing.iloc[:5]
+some_labels = housing_labels.iloc[:5] # housing_labels are the target values
+some_data_prepared = full_pipeline.transform(some_data)
+print("Predictions: ",lin_reg.predict(some_data_prepared)) # Predicted values
+print("Actual Targets: ",list(some_labels)) # Actual values
+
+
+# In[52]:
+
+
+# Let's measure the regression model's RMSE on the whole dataset
+from sklearn.metrics import mean_squared_error
+housing_predictions = lin_reg.predict(housing_prepared)
+lin_mse = mean_squared_error(housing_labels, housing_predictions)
+lin_rmse = np.sqrt(lin_mse)
+lin_rmse
 
 
 # In[ ]:
