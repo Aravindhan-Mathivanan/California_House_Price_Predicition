@@ -575,10 +575,10 @@ housing_prepared.shape
 # Select and Train a Model
 
 
-# In[49]:
+# In[70]:
 
 
-# Training and evaluating on the training set
+# Training and evaluating on the training set using Linear regressor
 
 
 # In[50]:
@@ -609,6 +609,86 @@ housing_predictions = lin_reg.predict(housing_prepared)
 lin_mse = mean_squared_error(housing_labels, housing_predictions)
 lin_rmse = np.sqrt(lin_mse)
 lin_rmse
+
+
+# In[79]:
+
+
+# most districts’ median_housing_values range between $120,000 and $265,000, 
+# so a typical prediction error of $68,628 is not very satisfying. 
+# This is an example of a model underfitting the training data.
+
+# When this happens it can mean that the features do not provide enough information to make good predictions, or 
+# that the model is not powerful enough.
+
+
+# In[80]:
+
+
+# Using Decision tree regressor model
+
+
+# In[55]:
+
+
+from sklearn.tree import DecisionTreeRegressor
+tree_reg = DecisionTreeRegressor()
+tree_reg.fit(housing_prepared,housing_labels)
+
+
+# In[57]:
+
+
+housing_predictions = tree_reg.predict(housing_prepared)
+tree_mse = mean_squared_error(housing_labels, housing_predictions)
+tree_rmse = np.sqrt(tree_mse)
+tree_rmse
+
+
+# In[58]:
+
+
+# Zero error seems suspicious as it might indicate overfitting
+
+
+# In[59]:
+
+
+#  Evaluating the model using cross - validation
+
+
+# In[81]:
+
+
+from sklearn.model_selection import cross_val_score
+scores = cross_val_score(tree_reg, housing_prepared, housing_labels, scoring ='neg_mean_squared_error', cv=10) # cv = 10 means 10 fold cross validation
+tree_rmse_scores = np.sqrt(-scores) # negative sign is added to the scores variable as the output of scores variable is negative by default hence
+                                    # adding a -ve to make it positive as the np.sqrt() takes in only +ve values
+
+
+# In[72]:
+
+
+def display_scores(scores):
+    print('Scores:',scores)
+    print('Mean:',scores.mean())
+    print('Standard Deviation:',scores.std())
+
+display_scores(tree_rmse_scores)
+
+
+# In[77]:
+
+
+lin_scores = cross_val_score(lin_reg, housing_prepared, housing_labels, scoring ='neg_mean_squared_error', cv=10)
+lin_rmse_scores = np.sqrt(-lin_scores)
+display_scores(lin_rmse_scores)
+
+
+# In[78]:
+
+
+# the Decision Tree model is overfitting so badly that it performs worse than the Linear Regression model.
 
 
 # In[ ]:
