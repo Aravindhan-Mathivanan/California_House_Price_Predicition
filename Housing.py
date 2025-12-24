@@ -575,7 +575,7 @@ housing_prepared.shape
 # Select and Train a Model
 
 
-# In[70]:
+# In[49]:
 
 
 # Training and evaluating on the training set using Linear regressor
@@ -611,7 +611,7 @@ lin_rmse = np.sqrt(lin_mse)
 lin_rmse
 
 
-# In[79]:
+# In[53]:
 
 
 # most districts’ median_housing_values range between $120,000 and $265,000, 
@@ -622,7 +622,7 @@ lin_rmse
 # that the model is not powerful enough.
 
 
-# In[80]:
+# In[54]:
 
 
 # Using Decision tree regressor model
@@ -636,7 +636,7 @@ tree_reg = DecisionTreeRegressor()
 tree_reg.fit(housing_prepared,housing_labels)
 
 
-# In[57]:
+# In[56]:
 
 
 housing_predictions = tree_reg.predict(housing_prepared)
@@ -645,19 +645,19 @@ tree_rmse = np.sqrt(tree_mse)
 tree_rmse
 
 
-# In[58]:
+# In[57]:
 
 
 # Zero error seems suspicious as it might indicate overfitting
 
 
-# In[59]:
+# In[58]:
 
 
 #  Evaluating the model using cross - validation
 
 
-# In[81]:
+# In[59]:
 
 
 from sklearn.model_selection import cross_val_score
@@ -666,7 +666,7 @@ tree_rmse_scores = np.sqrt(-scores) # negative sign is added to the scores varia
                                     # adding a -ve to make it positive as the np.sqrt() takes in only +ve values
 
 
-# In[72]:
+# In[60]:
 
 
 def display_scores(scores):
@@ -677,7 +677,7 @@ def display_scores(scores):
 display_scores(tree_rmse_scores)
 
 
-# In[77]:
+# In[61]:
 
 
 lin_scores = cross_val_score(lin_reg, housing_prepared, housing_labels, scoring ='neg_mean_squared_error', cv=10)
@@ -685,14 +685,87 @@ lin_rmse_scores = np.sqrt(-lin_scores)
 display_scores(lin_rmse_scores)
 
 
-# In[78]:
+# In[62]:
 
 
 # the Decision Tree model is overfitting so badly that it performs worse than the Linear Regression model.
 
 
+# In[63]:
+
+
+# Ensemble learning using Random Forest (Ensemble of decision trees)
+
+
+# In[64]:
+
+
+from sklearn.ensemble import RandomForestRegressor
+forest_reg = RandomForestRegressor()
+forest_reg.fit(housing_prepared,housing_labels)
+housing_predictions = forest_reg.predict(housing_prepared)
+
+
+# In[65]:
+
+
+forest_mse = mean_squared_error(housing_labels,housing_predictions)
+forest_rmse = np.sqrt(forest_mse)
+forest_rmse
+
+
+# In[66]:
+
+
+forest_scores = cross_val_score(forest_reg, housing_prepared, housing_labels, scoring ='neg_mean_squared_error', cv=10)
+forest_rmse_scores = np.sqrt(-forest_scores)
+display_scores(forest_rmse_scores)
+
+
+# In[67]:
+
+
+# the score on the training set is still much lower than on the
+# validation sets, meaning that the model is still overfitting the training set.
+# Possible solutions for overfitting are to simplify the model, constrain it (i.e., regularize it), or get a lot more training data.
+
+
+# In[70]:
+
+
+# import joblib
+# joblib.dump(my_model,'my_model.pkl')
+# my_model_loaded = joblib.load('my_model.pkl')
+
+
+# In[71]:
+
+
+# Fine tuning model
+
+
+# In[74]:
+
+
+# Grid search
+from sklearn.model_selection import GridSearchCV
+param_grid = [{'n_estimators':[3,10,30],'max_features':[2,4,6,8]},{'bootstrap':[False],'n_estimators':[3,10],'max_features':[2,3,4]}]
+# n_estimators determines no of decision trees like 3, 10, 30
+# bootstrap is a kind of sampling
+
+forest_reg = RandomForestRegressor()
+grid_search = GridSearchCV(forest_reg, param_grid, cv = 5, scoring = 'neg_mean_squared_error')
+grid_search.fit(housing_prepared,housing_labels)
+
+
+# In[75]:
+
+
+grid_search.best_params_
+
+
 # In[ ]:
 
 
-
+# Have to eplore bootstrap
 
