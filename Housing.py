@@ -744,28 +744,85 @@ display_scores(forest_rmse_scores)
 # Fine tuning model
 
 
-# In[74]:
+# In[77]:
 
 
 # Grid search
 from sklearn.model_selection import GridSearchCV
 param_grid = [{'n_estimators':[3,10,30],'max_features':[2,4,6,8]},{'bootstrap':[False],'n_estimators':[3,10],'max_features':[2,3,4]}]
 # n_estimators determines no of decision trees like 3, 10, 30
-# bootstrap is a kind of sampling
+# max features a decision tree can have inside a random forest
+# So here the grid search is experimenting with different random forest each random forest have a no of decision trees 3 or 10 or 30 as per the 1st dictionary
+# In that 3 10 or 30 DTs each DTs can have max of 2, 4, 6, or 8 features
+
+# bootstrap is a kind of sampling with replacement (i.e repetion of a same sample within the set)
+# for eg: row no 1635 in a dataset can be appeared multiple times in a sample
+# hence bootstrap sampling is set to false hence the DT can have all the rows without repetition
 
 forest_reg = RandomForestRegressor()
 grid_search = GridSearchCV(forest_reg, param_grid, cv = 5, scoring = 'neg_mean_squared_error')
 grid_search.fit(housing_prepared,housing_labels)
 
 
-# In[75]:
+# In[78]:
 
 
 grid_search.best_params_
 
 
+# In[80]:
+
+
+grid_search.best_estimator_ # gives the best combination of hyper parameter that has least error
+
+
+# In[92]:
+
+
+# checking the scores of all parameter combinations defined before in the param_grid
+cross_val_result = grid_search.cv_results_
+for mean_score, params in zip(cross_val_result['mean_test_score'],cross_val_result['params']):
+    print(np.sqrt(-mean_score), params)
+
+
+# In[93]:
+
+
+# importance of each attribute in the prediction
+# Let’s display these importance scores next to their corresponding attribute names:
+
+feature_importances = grid_search.best_estimator_.feature_importances_ 
+extra_attribs = ["rooms_per_hhold", "pop_per_hhold", "bedrooms_per_room"]
+cat_one_hot_attribs = list(encoder.categories_) 
+attributes = num_attribs + extra_attribs + cat_one_hot_attribs 
+sorted(zip(feature_importances, attributes), reverse=True)
+
+
+# In[94]:
+
+
+# So this shows how much importance each features were during the predictions
+
+
+# In[96]:
+
+
+# Evaluating the model on the test set
+final_model = grid_search.best_estimator_
+X_test = strat_test_set.drop('median_house_value', axis = 1)
+y_test = strat_test_set['median_house_value'].copy()
+
+X_test_prepared = full_pipeline.transform(X_test)
+
+final_predictions = final_model.predict(X_test_prepared)
+
+final_mse = mean_squared_error(y_test, final_predictions)
+final_rmse = np.sqrt(final_mse)
+final_rmse
+
+
 # In[ ]:
 
 
-# Have to eplore bootstrap
+
 
