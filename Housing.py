@@ -776,7 +776,7 @@ grid_search.best_params_
 grid_search.best_estimator_ # gives the best combination of hyper parameter that has least error
 
 
-# In[92]:
+# In[97]:
 
 
 # checking the scores of all parameter combinations defined before in the param_grid
@@ -808,6 +808,70 @@ sorted(zip(feature_importances, attributes), reverse=True)
 
 
 # Evaluating the model on the test set
+final_model = grid_search.best_estimator_ 
+# The grid_search.best_estimator_ by default save the model with the best parameters to itself
+# so no need to tune the model again with the best parameters
+X_test = strat_test_set.drop('median_house_value', axis = 1)
+y_test = strat_test_set['median_house_value'].copy()
+
+X_test_prepared = full_pipeline.transform(X_test)
+
+final_predictions = final_model.predict(X_test_prepared)
+
+final_mse = mean_squared_error(y_test, final_predictions)
+final_rmse = np.sqrt(final_mse)
+final_rmse
+
+
+# In[ ]:
+
+
+# Trying with a Support Vector Regressor
+
+
+# In[100]:
+
+
+from sklearn.svm import SVR
+svm_reg = SVR()
+svm_reg.fit(housing_prepared,housing_labels)
+housing_predictions = svm_reg.predict(housing_prepared)
+
+
+# In[101]:
+
+
+svm_mse = mean_squared_error(housing_labels,housing_predictions)
+svm_rmse = np.sqrt(svm_mse)
+svm_rmse
+
+
+# In[104]:
+
+
+svr_scores = cross_val_score(svm_reg, housing_prepared, housing_labels, scoring ='neg_mean_squared_error', cv=10)
+svr_rmse_scores = np.sqrt(-svr_scores)
+display_scores(svr_rmse_scores)
+
+
+# In[108]:
+
+
+param_grid  = [{'kernel':['linear','rbf'],'C':[20.0, 50.0, 100.0], 'gamma':['scale','auto']}]
+
+grid_search = GridSearchCV(svm_reg, param_grid, cv = 5, scoring = 'neg_mean_squared_error')
+grid_search.fit(housing_prepared,housing_labels)
+
+
+# In[109]:
+
+
+grid_search.best_estimator_
+
+
+# In[110]:
+
+
 final_model = grid_search.best_estimator_
 X_test = strat_test_set.drop('median_house_value', axis = 1)
 y_test = strat_test_set['median_house_value'].copy()
@@ -819,6 +883,34 @@ final_predictions = final_model.predict(X_test_prepared)
 final_mse = mean_squared_error(y_test, final_predictions)
 final_rmse = np.sqrt(final_mse)
 final_rmse
+
+
+# In[111]:
+
+
+# Trying Randomizedsearch CV
+
+# So gridsearchCV does cross validations with the defined hyper parameter combinations
+# param_grid  = [{'kernel':['linear','rbf'],'C':[20.0, 50.0, 100.0]}] 
+# In this there are 6 combinations of two hyper parameters
+# But randomizedsearch CV randomly selects from the given hyper parameters for the given iterations
+
+from sklearn.model_selection import RandomizedSearchCV
+param_grid  = [{'kernel':['linear','rbf'],'C':[20.0, 50.0, 100.0], 'gamma':['scale','auto']}]
+random_search = RandomizedSearchCV(svm_reg, param_grid, cv = 5, scoring = 'neg_mean_squared_error')
+random_search.fit(housing_prepared,housing_labels)
+
+
+# In[112]:
+
+
+random_search.best_estimator_
+
+
+# In[113]:
+
+
+# Note: Gamma parameter is only for rbf kernel not for SVR
 
 
 # In[ ]:
