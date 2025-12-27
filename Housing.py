@@ -730,7 +730,7 @@ display_scores(forest_rmse_scores)
 # Possible solutions for overfitting are to simplify the model, constrain it (i.e., regularize it), or get a lot more training data.
 
 
-# In[70]:
+# In[68]:
 
 
 # import joblib
@@ -738,13 +738,13 @@ display_scores(forest_rmse_scores)
 # my_model_loaded = joblib.load('my_model.pkl')
 
 
-# In[71]:
+# In[69]:
 
 
 # Fine tuning model
 
 
-# In[77]:
+# In[70]:
 
 
 # Grid search
@@ -764,19 +764,19 @@ grid_search = GridSearchCV(forest_reg, param_grid, cv = 5, scoring = 'neg_mean_s
 grid_search.fit(housing_prepared,housing_labels)
 
 
-# In[78]:
+# In[71]:
 
 
 grid_search.best_params_
 
 
-# In[80]:
+# In[72]:
 
 
 grid_search.best_estimator_ # gives the best combination of hyper parameter that has least error
 
 
-# In[97]:
+# In[73]:
 
 
 # checking the scores of all parameter combinations defined before in the param_grid
@@ -785,7 +785,7 @@ for mean_score, params in zip(cross_val_result['mean_test_score'],cross_val_resu
     print(np.sqrt(-mean_score), params)
 
 
-# In[93]:
+# In[74]:
 
 
 # importance of each attribute in the prediction
@@ -798,13 +798,13 @@ attributes = num_attribs + extra_attribs + cat_one_hot_attribs
 sorted(zip(feature_importances, attributes), reverse=True)
 
 
-# In[94]:
+# In[75]:
 
 
 # So this shows how much importance each features were during the predictions
 
 
-# In[96]:
+# In[76]:
 
 
 # Evaluating the model on the test set
@@ -823,13 +823,13 @@ final_rmse = np.sqrt(final_mse)
 final_rmse
 
 
-# In[ ]:
+# In[77]:
 
 
 # Trying with a Support Vector Regressor
 
 
-# In[100]:
+# In[78]:
 
 
 from sklearn.svm import SVR
@@ -838,7 +838,7 @@ svm_reg.fit(housing_prepared,housing_labels)
 housing_predictions = svm_reg.predict(housing_prepared)
 
 
-# In[101]:
+# In[79]:
 
 
 svm_mse = mean_squared_error(housing_labels,housing_predictions)
@@ -846,7 +846,7 @@ svm_rmse = np.sqrt(svm_mse)
 svm_rmse
 
 
-# In[104]:
+# In[80]:
 
 
 svr_scores = cross_val_score(svm_reg, housing_prepared, housing_labels, scoring ='neg_mean_squared_error', cv=10)
@@ -854,22 +854,98 @@ svr_rmse_scores = np.sqrt(-svr_scores)
 display_scores(svr_rmse_scores)
 
 
-# In[108]:
+# In[81]:
 
 
+# param_grid  = [{'kernel':['linear','rbf'],'C':[20.0, 50.0, 100.0], 'gamma':['scale','auto']}]
+
+# grid_search = GridSearchCV(svm_reg, param_grid, cv = 5, scoring = 'neg_mean_squared_error')
+# grid_search.fit(housing_prepared,housing_labels)
+
+
+# In[82]:
+
+
+# grid_search.best_estimator_
+
+
+# In[83]:
+
+
+# final_model = grid_search.best_estimator_
+# X_test = strat_test_set.drop('median_house_value', axis = 1)
+# y_test = strat_test_set['median_house_value'].copy()
+
+# X_test_prepared = full_pipeline.transform(X_test)
+
+# final_predictions = final_model.predict(X_test_prepared)
+
+# final_mse = mean_squared_error(y_test, final_predictions)
+# final_rmse = np.sqrt(final_mse)
+# final_rmse
+
+
+# In[84]:
+
+
+# Trying Randomizedsearch CV
+
+# So gridsearchCV does cross validations with the defined hyper parameter combinations
+# param_grid  = [{'kernel':['linear','rbf'],'C':[20.0, 50.0, 100.0]}] 
+# In this there are 6 combinations of two hyper parameters
+# But randomizedsearch CV randomly selects from the given hyper parameters for the given iterations
+# let's say there are 10 combinations of hyperparameters in the param_grid
+# but if the n_iter parameter is set to 7 RandomizedSearchCV randomly selects 7 possible parameter combinations and does cross validations for each combinations
+
+from sklearn.model_selection import RandomizedSearchCV
 param_grid  = [{'kernel':['linear','rbf'],'C':[20.0, 50.0, 100.0], 'gamma':['scale','auto']}]
-
-grid_search = GridSearchCV(svm_reg, param_grid, cv = 5, scoring = 'neg_mean_squared_error')
-grid_search.fit(housing_prepared,housing_labels)
-
-
-# In[109]:
+random_search = RandomizedSearchCV(svm_reg, param_grid, n_iter = 5, cv = 5, scoring = 'neg_mean_squared_error')
+random_search.fit(housing_prepared,housing_labels)
 
 
-grid_search.best_estimator_
+# In[85]:
 
 
-# In[110]:
+random_search.best_estimator_
+
+
+# In[86]:
+
+
+# As the hyperparameters were same as the gridsearch hence skipping the testing on test data
+
+
+# In[87]:
+
+
+# Note: Gamma parameter is only for rbf kernel not for SVR
+
+
+# In[ ]:
+
+
+# Try adding a transformer in the preparation pipeline to select only the most important attributes.
+
+
+# In[88]:
+
+
+# As the grid_search.best_estimator_.feature_importances_ doesn't work for SVR we are getting back to RandomForest
+
+feature_importances = grid_search.best_estimator_.feature_importances_
+feature_importances
+
+
+# In[89]:
+
+
+extra_attribs = ['rooms_per_hhold','pop_per_hhold', 'bedrooms_per_room']
+one_hot_attribs = list(encoder.categories_[0])
+attributes = num_attribs + extra_attribs + one_hot_attribs
+sorted(zip(feature_importances,attributes), reverse = True)
+
+
+# In[90]:
 
 
 final_model = grid_search.best_estimator_
@@ -885,36 +961,8 @@ final_rmse = np.sqrt(final_mse)
 final_rmse
 
 
-# In[111]:
-
-
-# Trying Randomizedsearch CV
-
-# So gridsearchCV does cross validations with the defined hyper parameter combinations
-# param_grid  = [{'kernel':['linear','rbf'],'C':[20.0, 50.0, 100.0]}] 
-# In this there are 6 combinations of two hyper parameters
-# But randomizedsearch CV randomly selects from the given hyper parameters for the given iterations
-
-from sklearn.model_selection import RandomizedSearchCV
-param_grid  = [{'kernel':['linear','rbf'],'C':[20.0, 50.0, 100.0], 'gamma':['scale','auto']}]
-random_search = RandomizedSearchCV(svm_reg, param_grid, cv = 5, scoring = 'neg_mean_squared_error')
-random_search.fit(housing_prepared,housing_labels)
-
-
-# In[112]:
-
-
-random_search.best_estimator_
-
-
-# In[113]:
-
-
-# Note: Gamma parameter is only for rbf kernel not for SVR
-
-
 # In[ ]:
 
 
-
+# Edit these 
 
