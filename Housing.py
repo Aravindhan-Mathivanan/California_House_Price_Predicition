@@ -961,8 +961,97 @@ final_rmse = np.sqrt(final_mse)
 final_rmse
 
 
+# In[91]:
+
+
+from sklearn.base import BaseEstimator, TransformerMixin
+
+def indices_of_top_k(arr, k):
+    return np.sort(np.argpartition(np.array(arr), -k)[-k:])
+
+class TopFeatureSelector(BaseEstimator, TransformerMixin):
+    def __init__(self, feature_importances, k):
+        self.feature_importances = feature_importances
+        self.k = k
+    def fit(self, X, y = None):
+        self.feature_indices_ = indices_of_top_k(self.feature_importances, self.k)
+        return self
+    def transform(self, X):
+        return X[:, self.feature_indices_]
+
+
+# In[92]:
+
+
+k = 5 # selecting top 5 features
+
+top_k_feature_indices = indices_of_top_k(feature_importances, k)
+top_k_feature_indices
+
+
+# In[93]:
+
+
+np.array(attributes)[top_k_feature_indices]
+
+
+# In[94]:
+
+
+sorted(zip(feature_importances, attributes), reverse = True)[:k]
+
+
+# In[95]:
+
+
+preparation_and_feature_selection_pipeline = Pipeline([('preparation', full_pipeline), 
+                                                       ('feature_selection',TopFeatureSelector(feature_importances, k))])
+
+
+# In[96]:
+
+
+housing_prepared_top_k_features = preparation_and_feature_selection_pipeline.fit_transform(housing)
+
+
+# In[97]:
+
+
+housing_prepared_top_k_features[0:3]
+
+
+# In[98]:
+
+
+housing_prepared[0:3, top_k_feature_indices]
+
+
+# In[102]:
+
+
+# Creating a pipeline that does full data preparation and final prediction
+prepare_select_and_predict_pipeline = Pipeline([('Preparation',full_pipeline),('feature_selection',TopFeatureSelector(feature_importances, k)),
+                                                ('svm_reg', SVR(**random_search.best_params_))])
+
+
+# In[103]:
+
+
+prepare_select_and_predict_pipeline.fit(housing,housing_labels)
+
+
+# In[104]:
+
+
+some_data = housing.iloc[:4]
+some_labels = housing_labels.iloc[:4]
+
+print("Predictions:\t", prepare_select_and_predict_pipeline.predict(some_data))
+print("Labels:\t\t", list(some_labels))
+
+
 # In[ ]:
 
 
-# Edit these 
+
 
