@@ -921,13 +921,13 @@ random_search.best_estimator_
 # Note: Gamma parameter is only for rbf kernel not for SVR
 
 
-# In[ ]:
+# In[88]:
 
 
 # Try adding a transformer in the preparation pipeline to select only the most important attributes.
 
 
-# In[88]:
+# In[89]:
 
 
 # As the grid_search.best_estimator_.feature_importances_ doesn't work for SVR we are getting back to RandomForest
@@ -936,7 +936,7 @@ feature_importances = grid_search.best_estimator_.feature_importances_
 feature_importances
 
 
-# In[89]:
+# In[90]:
 
 
 extra_attribs = ['rooms_per_hhold','pop_per_hhold', 'bedrooms_per_room']
@@ -945,7 +945,7 @@ attributes = num_attribs + extra_attribs + one_hot_attribs
 sorted(zip(feature_importances,attributes), reverse = True)
 
 
-# In[90]:
+# In[91]:
 
 
 final_model = grid_search.best_estimator_
@@ -961,7 +961,7 @@ final_rmse = np.sqrt(final_mse)
 final_rmse
 
 
-# In[91]:
+# In[92]:
 
 
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -980,7 +980,7 @@ class TopFeatureSelector(BaseEstimator, TransformerMixin):
         return X[:, self.feature_indices_]
 
 
-# In[92]:
+# In[93]:
 
 
 k = 5 # selecting top 5 features
@@ -989,44 +989,44 @@ top_k_feature_indices = indices_of_top_k(feature_importances, k)
 top_k_feature_indices
 
 
-# In[93]:
+# In[94]:
 
 
 np.array(attributes)[top_k_feature_indices]
 
 
-# In[94]:
+# In[95]:
 
 
 sorted(zip(feature_importances, attributes), reverse = True)[:k]
 
 
-# In[95]:
+# In[96]:
 
 
 preparation_and_feature_selection_pipeline = Pipeline([('preparation', full_pipeline), 
                                                        ('feature_selection',TopFeatureSelector(feature_importances, k))])
 
 
-# In[96]:
+# In[97]:
 
 
 housing_prepared_top_k_features = preparation_and_feature_selection_pipeline.fit_transform(housing)
 
 
-# In[97]:
+# In[98]:
 
 
 housing_prepared_top_k_features[0:3]
 
 
-# In[98]:
+# In[99]:
 
 
 housing_prepared[0:3, top_k_feature_indices]
 
 
-# In[102]:
+# In[100]:
 
 
 # Creating a pipeline that does full data preparation and final prediction
@@ -1034,13 +1034,13 @@ prepare_select_and_predict_pipeline = Pipeline([('Preparation',full_pipeline),('
                                                 ('svm_reg', SVR(**random_search.best_params_))])
 
 
-# In[103]:
+# In[101]:
 
 
 prepare_select_and_predict_pipeline.fit(housing,housing_labels)
 
 
-# In[104]:
+# In[102]:
 
 
 some_data = housing.iloc[:4]
@@ -1048,6 +1048,31 @@ some_labels = housing_labels.iloc[:4]
 
 print("Predictions:\t", prepare_select_and_predict_pipeline.predict(some_data))
 print("Labels:\t\t", list(some_labels))
+
+
+# In[103]:
+
+
+# Exploring preparation option using GridSearchCV
+
+
+# In[114]:
+
+
+param_grid = [{'Preparation__num_pipeline__imputer__strategy': ['mean', 'median', 'most_frequent'], 
+                'feature_selection__k': list(range(1, len(feature_importances)))}]
+
+
+grid_search_prep = GridSearchCV(prepare_select_and_predict_pipeline, param_grid, cv = 5, 
+                              scoring='neg_mean_squared_error', verbose = 2, n_jobs = 4)
+
+grid_search_prep.fit(housing,housing_labels)
+
+
+# In[ ]:
+
+
+
 
 
 # In[ ]:
